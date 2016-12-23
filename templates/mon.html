@@ -1,0 +1,143 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>1 Example</title>
+
+    <script src="http://code.jquery.com/jquery-3.1.1.js"></script>
+    <script src="https://code.highcharts.com/stock/highstock.js"></script>
+    <script src="https://code.highcharts.com/stock/modules/exporting.js"></script>
+    <!--
+    <script src="http://cdn.hcharts.cn/jquery/jquery-1.8.3.min.js"></script>
+    <script src="https://code.highcharts.com/stock/highstock.js"></script>
+    <script src="https://code.highcharts.com/stock/modules/exporting.js"></script>
+    -->
+    <script>
+        function Push() {
+            $(function () {
+                $.getJSON('/data', function (data) {
+                    // Create the chart
+                    Highcharts.stockChart('container', {
+                        rangeSelector: {
+                            selected: 1
+                        },
+                        title: {
+                            text: 'AAPL Stock Price'
+                        },
+                        series: [{
+                            name: 'AAPL',
+                            data: data,
+                            tooltip: {
+                                valueDecimals: 2
+                            }
+                        }]
+                    });
+                });
+
+            });
+        }
+    </script>
+</head>
+<body>
+<div id="container" style="height: 400px"></div>
+<script>
+    $(function () {
+        $(document).ready(function () {
+            Highcharts.setOptions({
+                global: {
+                    useUTC: false
+                }
+            });
+            $.getJSON('/data', function (data) {
+                // Create the chart
+                Highcharts.stockChart('container', {
+                    chart: {
+                        type: 'spline',
+                        events: {
+                            load: function () {
+                                var series = this.series[0];
+                                setInterval(function () {
+                                    $.getJSON('/data', function (res) {
+                                        $.each(res, function (i, v) {
+                                           // this.series[0].addPoint([v.x, v.y], true, true);
+                                            series.addPoint([v.x, v.y], true, true)
+                                        });
+                                    })
+                                }, 1000*30)
+                            }
+                        }
+                    },
+                    rangeSelector: {
+                        buttons: [{
+                            count: 1,
+                            type: 'minute',
+                            text: '1M'
+                        }, {
+                            count: 5,
+                            type: 'minute',
+                            text: '5M'
+                        }, {
+                            type: 'all',
+                            text: 'All'
+                        }],
+                        inputEnabled: false,
+                        selected: 0
+                    },
+                    xAxis: {
+                        type: 'datetime',
+                        tickPixelInterval: 100
+                    },
+                    yAxis: {
+                        title: {
+                            text: 'PV'
+                        },
+                        plotLines: [{
+                            value: 0,
+                            width: 1,
+                            color: '#808080'
+                        }]
+                    },
+                    tooltip: {
+                        formatter: function () {
+                            return '<b>' + this.series.name + '</b><br/>' +
+                                    Highcharts.dateFormat('%Y-%m-%d %H:%M:%S', this.x) + '<br/>' +
+                                    Highcharts.numberFormat(this.y, 2);
+                        },
+                        shared:true
+                    },
+                    legend: {
+                        enabled: false
+                    },
+                    exporting: {
+                        enabled: false
+                    },
+                    title: {
+                        text: '网站浏览量数据'
+                    },
+                    series: [{
+                        name: 'PV',
+                        data: (function () {
+                            var datas = [];
+                            var xxdata = ''
+                            var yydata = ''
+                            var vv
+                            $.each(data, function (i, v) {
+                                vv = v
+                                if (i < data.length - 1) {
+                                    xxdata = data[i].x;
+                                    yydata = data[i].y;
+                                    datas.push({x: data[i].x, y: data[i].y});
+                                }
+                            });
+                            return datas;
+                        }())
+                    }]
+                });
+            });
+        })
+    });
+
+
+</script>
+</body>
+</html>
